@@ -77,7 +77,6 @@ sqlite3_extension_init( sqlite3                    *  db
 {
   int rc = SQLITE_OK;
   SQLITE_EXTENSION_INIT2( pApi );
-  (void) pzErrMsg;  /* Unused parameter */
   rc = sqlite3_create_function(
          db
        , "hash_str"                                         // function name
