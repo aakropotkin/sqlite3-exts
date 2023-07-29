@@ -14,6 +14,8 @@ PKG_CONFIG ?= pkg-config
 UNAME      ?= uname
 SQLITE3    ?= sqlite3
 GREP       ?= grep
+MKDIR      ?= mkdir
+MKDIR_P    ?= $(MKDIR) -p
 
 
 # ---------------------------------------------------------------------------- #
@@ -24,12 +26,12 @@ sqlite3_LDFLAGS ?= $(shell pkg-config --cflags sqlite3; )
 
 # ---------------------------------------------------------------------------- #
 
-CFLAGS          ?=
-CFLAGS          += -shared -fPIC -O2 $(sqlite3_CFLAGS)
+CFLAGS ?=
+CFLAGS += -shared -fPIC -O2 $(sqlite3_CFLAGS)
 
-LDFLAGS         ?=
-LDFLAGS         += -shared $(sqlite3_LDFLAGS) -Wl,--no-undefined
-LDFLAGS         += -Wl,--enable-new-dtags '-Wl,-rpath,$$ORIGIN/../lib'
+LDFLAGS ?=
+LDFLAGS += -shared $(sqlite3_LDFLAGS) -Wl,--no-undefined
+LDFLAGS += -Wl,--enable-new-dtags '-Wl,-rpath,$$ORIGIN/../lib'
 
 ifneq (,$(DEBUG))
 CFLAGS  += -ggdb3 -pg
@@ -52,8 +54,10 @@ endif  # ifndef libExt
 
 # ---------------------------------------------------------------------------- #
 
+LIBS = libsqlexts$(libExt)
+
 .PHONY: lib
-lib: libsqlexts$(libExt)
+lib: $(LIBS)
 all: lib
 
 libsqlexts$(libExt): hash_str.o
@@ -64,7 +68,7 @@ libsqlexts$(libExt): hash_str.o
 # ---------------------------------------------------------------------------- #
 
 clean: FORCE
-	-$(RM) *.o *.so *.dylib
+	-$(RM) *.o $(LIBS)
 	-$(RM) ./.tmpdb.db
 
 
@@ -76,6 +80,14 @@ check: libsqlexts$(libExt)
 	           "SELECT hash_str( 'Hello, World!' )"  \
 	  |$(GREP) '^-6390844608310610124$$'
 
+
+# ---------------------------------------------------------------------------- #
+
+PREFIX ?= out
+.phony: install
+install: $(LIBS)
+	$(MKDIR_P) $(PREFIX)/libexec
+	$(CP) -t $(PREFIX)/libexec $(LIBS)
 
 
 # ---------------------------------------------------------------------------- #
